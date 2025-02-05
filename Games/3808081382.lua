@@ -7,7 +7,7 @@ local Window = Rayfield:CreateWindow({
    LoadingSubtitle = "by @10.tempest.01 on Discord",
    Theme = "DarkBlue", -- Check https://docs.sirius.menu/rayfield/configuration/themes
 
-   DisableRayfieldPrompts = true,
+   DisableRayfieldPrompts = false,
    DisableBuildWarnings = false, -- Prevents Rayfield from warning when the script has a version mismatch with the interface
 
    ConfigurationSaving = {
@@ -88,8 +88,6 @@ local ThemeDropdown = UITab:CreateDropdown({
         Window.ModifyTheme(Options[1])
     end,
 })
-
-ThemeDropdown:Set(Rayfield.Flags.themedropdown.CurrentOption)
 
 local DashSection = MainTab:CreateSection("Dash Related")
 
@@ -214,3 +212,5 @@ end
 
 plr.CharacterAdded:Connect(emoteDashSetup)
 plr.CharacterAdded:Connect(noEndlagSetup)
+
+Rayfield:LoadConfiguration()
