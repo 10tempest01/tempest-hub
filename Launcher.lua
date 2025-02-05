@@ -1,3 +1,5 @@
+getgenv().TempestHubVersion = "v1.2"
+
 local supportedGames = {
     "3808081382" -- TSB
 }
