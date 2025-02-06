@@ -42,7 +42,8 @@ Rayfield:Notify({
 })
 
 -- LOCALS
-local plr = game:GetService("Players").LocalPlayer
+local plrs = game:GetService("Players")
+local plr = plrs.LocalPlayer
 local uis = game:GetService("UserInputService")
 local stgui = game:GetService("StarterGui")
 
@@ -62,6 +63,8 @@ local DiscordButton = MainTab:CreateButton({
         setclipboard("discord.gg/ewjaP4Q8dw")
     end,
 })
+
+local Divider = MainTab:CreateDivider()
 
 local UITab = Window:CreateTab("UI", "image")
 local ThemeSection = UITab:CreateSection("Theme")
@@ -94,6 +97,17 @@ local DashSection = MainTab:CreateSection("Dash Related")
 -- TOGGLES
 nosidedashendlag = true
 sidedashcancel = true
+nostun = false
+deathcounterindicator = false
+
+local nodashcooldownToggle = MainTab:CreateToggle({
+    Name = "No Dash Cooldown",
+    CurrentValue = false,
+    Flag = "nodashcooldown", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+    Callback = function(Value)
+        workspace:SetAttribute("NoDashCooldown", Value)
+    end,
+})
 
 local nosidedashendlagToggle = MainTab:CreateToggle({
     Name = "No Side Dash Endlag",
@@ -123,7 +137,42 @@ local sidedashcancelKeybind = MainTab:CreateKeybind({
     end,
 })
 
-local Label = MainTab:CreateLabel("I reccommend keeping this on Q for easy double-tap emote dash replica", "info")
+local Label = MainTab:CreateLabel("I recommend keeping this on Q for easy double-tap emote dash replica", "info")
+
+local Divider = MainTab:CreateDivider()
+
+local CharSection = MainTab:CreateSection("Character")
+
+local sidedashCancelToggle = MainTab:CreateToggle({
+    Name = "No Stun",
+    CurrentValue = false,
+    Flag = "nostun", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+    Callback = function(Value)
+        nostun = Value
+    end,
+})
+
+local noFatigueToggle = MainTab:CreateToggle({
+    Name = "No Fatigue (For Jumping)",
+    CurrentValue = false,
+    Flag = "nofatigue", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+    Callback = function(Value)
+        workspace:SetAttribute("NoFatigue", Value)
+    end,
+})
+
+local Divider = MainTab:CreateDivider()
+
+local GlobalSection = MainTab:CreateSection("Global")
+
+local deathcounterindicatorToggle = MainTab:CreateToggle({
+    Name = "Death Counter Indicator",
+    CurrentValue = false,
+    Flag = "deathcounterindicator", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+    Callback = function(Value)
+        deathcounterindicator = Value
+    end,
+})
 
 local Divider = MainTab:CreateDivider()
 
@@ -205,12 +254,57 @@ local function emoteDashSetup(char)
 	end)
 end
 
+local stunAspects = {
+    "Slowed",
+    "ComboStun",
+    "Freeze"
+}
+
+local function noStunSetup(char)
+    char.ChildAdded:Connect(function(c)
+        if nostun and table.find(stunAspects, c.Name) then
+            task.wait()
+            c:Destroy()
+        end 
+    end)
+end
+
+-- lol
+workspace:SetAttribute("VIPServer", plr.UserId)
+workspace:SetAttribute("VIPServerOwner", plr.Name)
+
+local function deathcounterindicatorSetup(char)
+    char.ChildAdded:Connect(function(c)
+        if deathcounterindicator and c.Name == "Counter" then
+            local hl = Instance.new("Highlight", char)
+            hl.Name = "lalala"
+        end
+    end)
+
+    char.ChildRemoved:Connect(function(c)
+        if c.Name == "Counter" then
+            if char:FindFirstChild("lalala") then
+                char.lalala:Destroy()
+            end
+        end
+    end)   
+end
+
+for _, player in pairs(plrs:GetPlayers()) do
+    if player.Character then
+        deathcounterindicatorSetup(player.Character)
+    end
+    plr.CharacterAdded:Connect(deathcounterindicatorSetup)
+end
+
 if plr.Character then
 	noEndlagSetup(plr.Character)
 	emoteDashSetup(plr.Character)
+    noStunSetup(plr.Character)
 end
 
 plr.CharacterAdded:Connect(emoteDashSetup)
 plr.CharacterAdded:Connect(noEndlagSetup)
+plr.CharacterAdded:Connect(noStunSetup)
 
 Rayfield:LoadConfiguration()
