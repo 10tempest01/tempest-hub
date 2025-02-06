@@ -294,7 +294,7 @@ for _, player in pairs(plrs:GetPlayers()) do
     if player.Character then
         deathcounterindicatorSetup(player.Character)
     end
-    plr.CharacterAdded:Connect(deathcounterindicatorSetup)
+    player.CharacterAdded:Connect(deathcounterindicatorSetup)
 end
 
 if plr.Character then
