@@ -139,6 +139,19 @@ local sidedashcancelKeybind = MainTab:CreateKeybind({
 
 local Label = MainTab:CreateLabel("I recommend keeping this on Q for easy double-tap emote dash replica", "info")
 
+local sidedashdelaySlider  = MainTab:CreateSlider({
+   Name = "Side Dash Delay\n(Server Request)",
+   Range = {0, 5},
+   Increment = 0.1,
+   Suffix = "seconds",
+   CurrentValue = 0,
+   Flag = "sidedashdelay", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Callback = function(Value)
+
+   end,
+})
+
+
 local Divider = MainTab:CreateDivider()
 
 local CharSection = MainTab:CreateSection("Character")
@@ -306,5 +319,27 @@ end
 plr.CharacterAdded:Connect(emoteDashSetup)
 plr.CharacterAdded:Connect(noEndlagSetup)
 plr.CharacterAdded:Connect(noStunSetup)
+
+-- prob should use hookmetamethod but not many executors support it nowadays so idrc :sob:
+local mt = getrawmetatable(game)
+setreadonly(mt, false)
+
+local oldNamecall = mt.__namecall
+mt.__namecall = newcclosure(function(self, ...)
+    
+    local method = getnamecallmethod()
+    
+    if method == "FireServer" and self.Name == "Communicate" then
+        local args = {...}
+        if args[1]["Dash"] and args[1]["Dash"] == Enum.KeyCode.D or args[1]["Dash"] == Enum.KeyCode.A then
+            task.wait(sidedashdelaySlider.CurrentValue or 0)
+            return oldNamecall(self, ...)
+        end
+    end
+
+    return oldNamecall(self, ...)
+end)
+
+setreadonly(mt, true)
 
 Rayfield:LoadConfiguration()
