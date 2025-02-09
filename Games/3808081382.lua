@@ -208,7 +208,7 @@ local function noEndlagSetup(char)
 		if t then
 			return
 		end
-		if nosidedashendlag and input.KeyCode == Enum.KeyCode.Q and (not uis:IsKeyDown(Enum.KeyCode.D)) and (not uis:IsKeyDown(Enum.KeyCode.A)) and (not uis:IsKeyDown(Enum.KeyCode.S)) and char:FindFirstChild("UsedDash") then
+		if nosidedashendlag and input.KeyCode == Enum.KeyCode.Q and (not uis:IsKeyDown(Enum.KeyCode.D)) and (not uis:IsKeyDown(Enum.KeyCode.A)) and (not uis:IsKeyDown(Enum.KeyCode.S)) and not char:FindFirstChild("Freeze") and not char:FindFirstChild("Slowed") then
 			frontDash()
 		end
 	end)
