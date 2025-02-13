@@ -97,6 +97,7 @@ local DashSection = MainTab:CreateSection("Dash Related")
 -- TOGGLES
 nosidedashendlag = true
 sidedashcancel = true
+frontdashcancel = false
 nostun = false
 deathcounterindicator = false
 
@@ -138,6 +139,25 @@ local sidedashcancelKeybind = MainTab:CreateKeybind({
 })
 
 local Label = MainTab:CreateLabel("I recommend keeping this on Q for easy double-tap emote dash replica", "info")
+
+local frontdashcancelToggle = MainTab:CreateToggle({
+    Name = "Front Dash Cancel",
+    CurrentValue = false,
+    Flag = "frontdashcancel", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+    Callback = function(Value)
+        frontdashcancel = Value
+    end,
+})
+
+local frontdashcancelKeybind = MainTab:CreateKeybind({
+    Name = "Front Dash Cancel Keybind",
+    CurrentKeybind = "Q",
+    HoldToInteract = false,
+    Flag = "frontdashcancelKeybind", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+    Callback = function(Keybind)
+        
+    end,
+})
 
 local sidedashdelaySlider  = MainTab:CreateSlider({
    Name = "Side Dash Delay\n(Server Request)",
@@ -205,22 +225,27 @@ end
 
 local function noEndlagSetup(char)
 	local connection = uis.InputBegan:Connect(function(input, t)
-		if t then
-			return
-		end
+	    
+		if t then return end
+		
 		if nosidedashendlag and input.KeyCode == Enum.KeyCode.Q and (not uis:IsKeyDown(Enum.KeyCode.D)) and (not uis:IsKeyDown(Enum.KeyCode.A)) and (not uis:IsKeyDown(Enum.KeyCode.S)) and not char:FindFirstChild("Freeze") and not char:FindFirstChild("Slowed") then
 			frontDash()
 		end
 	end)
+	
 	char.Destroying:Connect(function()
 		connection:Disconnect()
 	end)
 end
 
 local function stopAnimation(char, animationId)
+    
 	local humanoid = char:FindFirstChildWhichIsA("Humanoid")
+	
 	if humanoid then
+	    
 		local animator = humanoid:FindFirstChildWhichIsA("Animator")
+		
 		if animator then
 			for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
 				if track.Animation and track.Animation.AnimationId == "rbxassetid://" .. tostring(animationId) then
@@ -232,9 +257,13 @@ local function stopAnimation(char, animationId)
 end
 
 local function isAnimationRunning(char, animationId)
+    
 	local humanoid = char:FindFirstChildWhichIsA("Humanoid")
+	
 	if humanoid then
+	    
 		local animator = humanoid:FindFirstChildWhichIsA("Animator")
+		
 		if animator then
 			for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
 				if track.Animation and track.Animation.AnimationId == "rbxassetid://" .. tostring(animationId) then
@@ -250,15 +279,34 @@ end
 local function emoteDashSetup(char)
 	local hrp = char:WaitForChild("HumanoidRootPart")
 	local connection = uis.InputBegan:Connect(function(input, t)
-		if t then
-			return
-		end
+	    
+		if t then return end
+		
 		if sidedashcancel and input.KeyCode == Enum.KeyCode[sidedashcancelKeybind.CurrentKeybind] and (not uis:IsKeyDown(Enum.KeyCode.W)) and (not uis:IsKeyDown(Enum.KeyCode.S)) and (not isAnimationRunning(char, 10491993682)) then
 			local vel = hrp:FindFirstChild("dodgevelocity")
 			if vel then
 				vel:Destroy()
 				stopAnimation(char, 10480793962)
 				stopAnimation(char, 10480796021)
+			end
+		end
+	end)
+	
+	char.Destroying:Connect(function()
+		connection:Disconnect()
+	end)
+end
+
+local function frontDashCancelSetup(char)
+	local hrp = char:WaitForChild("HumanoidRootPart")
+	local connection = uis.InputBegan:Connect(function(input, t)
+	    
+		if t then return end
+		
+		if frontdashcancel and input.KeyCode == Enum.KeyCode[frontdashcancelKeybind.CurrentKeybind] then
+			local vel = hrp:FindFirstChild("moveme")
+			if vel then
+				vel:Destroy()
 			end
 		end
 	end)
@@ -310,19 +358,28 @@ for _, player in pairs(plrs:GetPlayers()) do
     player.CharacterAdded:Connect(deathcounterindicatorSetup)
 end
 
+plrs.PlayerAdded:Connect(function(player)
+    if player.Character then
+        deathcounterindicatorSetup(player.Character)
+    end
+    player.CharacterAdded:Connect(deathcounterindicatorSetup)
+end)
+
 if plr.Character then
 	noEndlagSetup(plr.Character)
 	emoteDashSetup(plr.Character)
     noStunSetup(plr.Character)
+    frontDashCancelSetup(plr.Character)
 end
 
 plr.CharacterAdded:Connect(emoteDashSetup)
 plr.CharacterAdded:Connect(noEndlagSetup)
 plr.CharacterAdded:Connect(noStunSetup)
+plr.CharacterAdded:Connect(frontDashCancelSetup)
 
 -- prob should use hookmetamethod but not many executors support it nowadays so idrc :sob:
 local mt = getrawmetatable(game)
-setreadonly(mt, false)
+if setreadonly then setreadonly(mt, false) end
 
 local oldNamecall = mt.__namecall
 mt.__namecall = newcclosure(function(self, ...)
@@ -340,6 +397,6 @@ mt.__namecall = newcclosure(function(self, ...)
     return oldNamecall(self, ...)
 end)
 
-setreadonly(mt, true)
+if setreadonly then setreadonly(mt, true) end
 
 Rayfield:LoadConfiguration()
